@@ -15,15 +15,16 @@ public class OrderedRocketMqConsumer extends AbstractRocketMqConsumer {
       String groupName,
       String topic,
       String tag,
-      MessageModel messageModel) {
-    super(brokerAddress, groupName, topic, tag, messageModel);
+      MessageModel messageModel,
+      Consumer<String> messageConsumer) {
+    super(brokerAddress, groupName, topic, tag, messageModel, messageConsumer);
   }
 
   @Override
-  void addMessageListener(Consumer<String> messageConsumer) {
+  void addMessageListener() {
     consumer.registerMessageListener((MessageListenerOrderly) (messages, context) -> {
       try {
-        consume(messageConsumer, messages);
+        consume(messages);
       } catch (Exception e) {
         log.error("Failed to consume messages from Rocket MQ: {}", messages, e);
         return ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;

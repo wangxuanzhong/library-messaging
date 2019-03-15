@@ -20,7 +20,8 @@
     <module>messaging-common</module>
     <module>messaging-embedded</module>
     <module>messaging-rocketmq</module>
-    <module>messaging-spring</module>
+    <module>messaging-redis-spring</module>
+    <module>messaging-all-spring</module>
   </modules>
 
   <properties>

@@ -1,0 +1,9 @@
+spring:
+  redis:
+    host: redis.syswin.com
+    port: 6379
+    pool.min-idle: 1
+    pool.max-idle: 1
+    pool.max-active: 1
+    pool.max-wait: -1
+    timeout: 10000

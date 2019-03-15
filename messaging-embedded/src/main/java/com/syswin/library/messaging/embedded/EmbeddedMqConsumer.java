@@ -7,14 +7,16 @@ public class EmbeddedMqConsumer implements MqConsumer {
 
   private final String topic;
   private final MessageQueue messageQueue;
+  private final Consumer<String> messageListener;
 
-  public EmbeddedMqConsumer(MessageQueue messageQueue, String topic) {
+  public EmbeddedMqConsumer(MessageQueue messageQueue, String topic, Consumer<String> messageListener) {
     this.topic = topic;
     this.messageQueue = messageQueue;
+    this.messageListener = messageListener;
   }
 
   @Override
-  public void start(Consumer<String> messageListener) {
+  public void start() {
     messageQueue.subscribe(topic, messageListener);
   }
 

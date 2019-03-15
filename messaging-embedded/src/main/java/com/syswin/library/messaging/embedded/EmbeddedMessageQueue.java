@@ -13,6 +13,7 @@ public class EmbeddedMessageQueue implements MessageQueue {
 
   private final Map<String, Queue<Consumer<String>>> messageListeners = new ConcurrentHashMap<>();
 
+  // TODO: 2019/3/15 change to async mode
   @Override
   public void send(String topic, String message) {
     messageListeners.getOrDefault(topic, EMPTY_QUEUE).forEach(listener -> listener.accept(message));

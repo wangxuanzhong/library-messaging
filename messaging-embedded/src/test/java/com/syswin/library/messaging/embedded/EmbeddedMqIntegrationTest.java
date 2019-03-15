@@ -18,11 +18,11 @@ public class EmbeddedMqIntegrationTest {
   private final BlockingQueue<String> messages = new ArrayBlockingQueue<>(10);
   private final EmbeddedMessageQueue messageQueue = new EmbeddedMessageQueue();
   private final EmbeddedMqProducer mqProducer = new EmbeddedMqProducer(messageQueue);
-  private final EmbeddedMqConsumer embeddedMqConsumer = new EmbeddedMqConsumer(messageQueue, topic);
+  private final EmbeddedMqConsumer embeddedMqConsumer = new EmbeddedMqConsumer(messageQueue, topic, messages::add);
 
   @Test
   public void sendMessage() {
-    embeddedMqConsumer.start(messages::add);
+    embeddedMqConsumer.start();
 
     mqProducer.send(message1, topic, tag, keys);
     mqProducer.sendOrderly(message2, topic);

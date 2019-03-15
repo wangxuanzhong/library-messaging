@@ -9,7 +9,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>messaging-rocketmq-spring</artifactId>
+  <artifactId>messaging-redis-spring</artifactId>
 
   <dependencyManagement>
     <dependencies>
@@ -26,7 +26,7 @@
   <dependencies>
     <dependency>
       <groupId>com.syswin.library</groupId>
-      <artifactId>messaging-rocketmq</artifactId>
+      <artifactId>messaging-common</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -41,6 +41,10 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-log4j2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
 
     <dependency>
@@ -74,10 +78,6 @@
       </exclusions>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>com.syswin.library</groupId>
-      <artifactId>messaging-common</artifactId>
-    </dependency>
-
   </dependencies>
+
 </project>

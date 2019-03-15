@@ -24,30 +24,33 @@ abstract class AbstractRocketMqConsumer implements MqConsumer {
   private final String tag;
   private final String brokerAddress;
   private final MessageModel messageModel;
+  private final Consumer<String> messageConsumer;
 
   AbstractRocketMqConsumer(
       String brokerAddress,
       String groupName,
       String topic,
       String tag,
-      MessageModel messageModel) {
+      MessageModel messageModel,
+      Consumer<String> messageConsumer) {
 
     this.consumer = new DefaultMQPushConsumer(groupName);
     this.topic = topic;
     this.tag = tag;
     this.brokerAddress = brokerAddress;
     this.messageModel = messageModel;
+    this.messageConsumer = messageConsumer;
   }
 
   @Override
-  public final void start(Consumer<String> messageListener) throws MessagingException {
+  public final void start() throws MessagingException {
     try {
       consumer.setNamesrvAddr(brokerAddress);
       consumer.setMessageModel(messageModel);
       consumer.setInstanceName(UUID.randomUUID().toString());
       consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
       consumer.subscribe(topic, tag);
-      addMessageListener(messageListener);
+      addMessageListener();
       consumer.start();
       log.info("Rocket MQ consumer {} in group {} is listening on topic {} tag {} with broker {}",
           consumer.getInstanceName(),
@@ -66,12 +69,12 @@ abstract class AbstractRocketMqConsumer implements MqConsumer {
     log.info("Rocket MQ consumer {} in group {} shut down successfully", consumer.getInstanceName(), consumer.getConsumerGroup());
   }
 
-  final void consume(Consumer<String> messageConsumer, List<MessageExt> messages) {
+  final void consume(List<MessageExt> messages) {
     for (MessageExt msg : messages) {
       log.debug("Rocket MQ consumer received message {} on topic {} tag {}", msg, topic, tag);
       messageConsumer.accept(new String(msg.getBody()));
     }
   }
 
-  abstract void addMessageListener(Consumer<String> messageConsumer);
+  abstract void addMessageListener();
 }

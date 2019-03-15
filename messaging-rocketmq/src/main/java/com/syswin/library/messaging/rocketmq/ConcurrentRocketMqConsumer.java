@@ -16,16 +16,17 @@ public class ConcurrentRocketMqConsumer extends AbstractRocketMqConsumer {
       String groupName,
       String topic,
       String tag,
-      MessageModel messageModel) {
+      MessageModel messageModel,
+      Consumer<String> messageConsumer) {
 
-    super(brokerAddress, groupName, topic, tag, messageModel);
+    super(brokerAddress, groupName, topic, tag, messageModel, messageConsumer);
   }
 
   @Override
-  void addMessageListener(Consumer<String> messageListener) {
+  void addMessageListener() {
     consumer.registerMessageListener((MessageListenerConcurrently) (messages, context) -> {
       try {
-        consume(messageListener, messages);
+        consume(messages);
       } catch (Exception e) {
         log.error("Failed to consume messages from Rocket MQ: {}", messages, e);
         return ConsumeConcurrentlyStatus.RECONSUME_LATER;
