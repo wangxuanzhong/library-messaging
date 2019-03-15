@@ -97,11 +97,11 @@ public class RocketMqIntegrationTest {
     rocketMqProducer = new RocketMqProducer(brokerAddress, "data-consistency");
     rocketMqProducer.start();
 
-    concurrentMqConsumer = new ConcurrentRocketMqConsumer("consumer-concurrent", topic, tag, brokerAddress, messagesConcurrent::add, CLUSTERING);
-    concurrentMqConsumer.start();
+    concurrentMqConsumer = new ConcurrentRocketMqConsumer(brokerAddress, "consumer-concurrent", topic, tag, CLUSTERING);
+    concurrentMqConsumer.start(messagesConcurrent::add);
 
-    orderedMqConsumer = new OrderedRocketMqConsumer("consumer-group-ordered", topic, tag, brokerAddress, messagesOrdered::add, CLUSTERING);
-    orderedMqConsumer.start();
+    orderedMqConsumer = new OrderedRocketMqConsumer(brokerAddress, "consumer-group-ordered", topic, tag, CLUSTERING);
+    orderedMqConsumer.start(messagesOrdered::add);
   }
 
   @After

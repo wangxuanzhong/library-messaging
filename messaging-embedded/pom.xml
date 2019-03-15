@@ -9,7 +9,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>messaging-rocketmq</artifactId>
+  <artifactId>messaging-embedded</artifactId>
 
   <dependencies>
     <dependency>
@@ -19,10 +19,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.rocketmq</groupId>
-      <artifactId>rocketmq-client</artifactId>
     </dependency>
 
     <!-- test dependencies -->

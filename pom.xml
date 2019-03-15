@@ -18,7 +18,9 @@
 
   <modules>
     <module>messaging-common</module>
+    <module>messaging-embedded</module>
     <module>messaging-rocketmq</module>
+    <module>messaging-spring</module>
   </modules>
 
   <properties>
@@ -39,6 +41,16 @@
       <dependency>
         <groupId>com.syswin.library</groupId>
         <artifactId>messaging-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.syswin.library</groupId>
+        <artifactId>messaging-rocketmq</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>com.syswin.library</groupId>
+        <artifactId>messaging-embedded</artifactId>
         <version>1.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>

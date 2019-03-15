@@ -11,31 +11,26 @@ import org.slf4j.LoggerFactory;
 public class OrderedRocketMqConsumer extends AbstractRocketMqConsumer {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final MessageListenerOrderly messageListener;
-
-  OrderedRocketMqConsumer(String groupName,
+  OrderedRocketMqConsumer(String brokerAddress,
+      String groupName,
       String topic,
       String tag,
-      String brokerAddress,
-      Consumer<String> messageConsumer,
       MessageModel messageModel) {
-    super(groupName, topic, tag, brokerAddress, messageModel, messageConsumer);
+    super(brokerAddress, groupName, topic, tag, messageModel);
+  }
 
-    messageListener = (messages, context) -> {
+  @Override
+  void addMessageListener(Consumer<String> messageConsumer) {
+    consumer.registerMessageListener((MessageListenerOrderly) (messages, context) -> {
       try {
-        consume(messages);
+        consume(messageConsumer, messages);
       } catch (Exception e) {
         log.error("Failed to consume messages from Rocket MQ: {}", messages, e);
         return ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;
       }
       return ConsumeOrderlyStatus.SUCCESS;
 
-    };
-  }
-
-  @Override
-  void registerMessageListener() {
-    consumer.registerMessageListener(messageListener);
+    });
     log.info("Registered ordered message listener");
   }
 }

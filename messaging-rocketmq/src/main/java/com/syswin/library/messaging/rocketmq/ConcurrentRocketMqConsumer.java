@@ -12,31 +12,26 @@ public class ConcurrentRocketMqConsumer extends AbstractRocketMqConsumer {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private final MessageListenerConcurrently messageListener;
-
-  public ConcurrentRocketMqConsumer(String groupName,
+  public ConcurrentRocketMqConsumer(String brokerAddress,
+      String groupName,
       String topic,
       String tag,
-      String brokerAddress,
-      Consumer<String> messageConsumer,
       MessageModel messageModel) {
 
-    super(groupName, topic, tag, brokerAddress, messageModel, messageConsumer);
+    super(brokerAddress, groupName, topic, tag, messageModel);
+  }
 
-    messageListener = (messages, context) -> {
+  @Override
+  void addMessageListener(Consumer<String> messageListener) {
+    consumer.registerMessageListener((MessageListenerConcurrently) (messages, context) -> {
       try {
-        consume(messages);
+        consume(messageListener, messages);
       } catch (Exception e) {
         log.error("Failed to consume messages from Rocket MQ: {}", messages, e);
         return ConsumeConcurrentlyStatus.RECONSUME_LATER;
       }
       return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-    };
-  }
-
-  @Override
-  void registerMessageListener() {
-    consumer.registerMessageListener(messageListener);
+    });
     log.info("Registered concurrent message listener");
   }
 }
