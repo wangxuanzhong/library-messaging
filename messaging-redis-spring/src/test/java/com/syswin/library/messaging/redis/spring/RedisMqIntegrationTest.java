@@ -9,6 +9,8 @@ import com.syswin.library.messaging.redis.spring.RedisMqIntegrationTest.Config;
 import com.syswin.library.messaging.redis.spring.containers.RedisContainer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -56,7 +58,7 @@ public class RedisMqIntegrationTest {
     System.setProperty("spring.redis.port", String.valueOf(redis.getMappedPort(6379)));
 
 
-    mqConsumer = new RedisMqConsumer(messages::add, topic);
+    mqConsumer = new RedisMqConsumer(new ExceptionThrowingConsumer(messages), topic);
     mqConsumer.start();
   }
 
@@ -81,6 +83,7 @@ public class RedisMqIntegrationTest {
 
   @Test
   public void shouldReceiveSentMessages() throws Exception {
+    mqProducer.send(message2, topic, tag, keys);
     mqProducer.send(message1, topic, tag, keys);
     mqProducer.sendOrderly(message2, topic);
     mqProducer.sendRandomly(message3, topic);
@@ -96,6 +99,24 @@ public class RedisMqIntegrationTest {
     @Bean
     RedisMqConsumer mqConsumer() {
       return mqConsumer;
+    }
+  }
+
+  private static class ExceptionThrowingConsumer implements Consumer<String> {
+
+    private final Queue<String> messages;
+    private final AtomicBoolean failed = new AtomicBoolean(true);
+
+    ExceptionThrowingConsumer(Queue<String> messages) {
+      this.messages = messages;
+    }
+
+    @Override
+    public void accept(String message) {
+      if (failed.compareAndSet(true, false)) {
+        throw new IllegalStateException("oops");
+      }
+      messages.add(message);
     }
   }
 }

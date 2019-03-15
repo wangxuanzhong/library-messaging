@@ -30,7 +30,7 @@ public class RedisMqConsumer implements MqConsumer, MessageListener {
     messageListener.accept(message.toString());
   }
 
-  public String topic() {
+  String topic() {
     return topic;
   }
 }
