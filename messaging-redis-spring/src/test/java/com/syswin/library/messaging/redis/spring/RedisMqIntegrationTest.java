@@ -58,7 +58,7 @@ public class RedisMqIntegrationTest {
     System.setProperty("spring.redis.port", String.valueOf(redis.getMappedPort(6379)));
 
 
-    mqConsumer = new RedisMqConsumer(new ExceptionThrowingConsumer(messages), topic);
+    mqConsumer = new RedisMqConsumer(topic, new ExceptionThrowingConsumer(messages));
     mqConsumer.start();
   }
 

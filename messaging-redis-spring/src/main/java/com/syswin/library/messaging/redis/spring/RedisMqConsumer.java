@@ -10,7 +10,7 @@ public class RedisMqConsumer implements MqConsumer, MessageListener {
   private final Consumer<String> messageListener;
   private final String topic;
 
-  public RedisMqConsumer(Consumer<String> messageListener, String topic) {
+  public RedisMqConsumer(String topic, Consumer<String> messageListener) {
     this.messageListener = messageListener;
     this.topic = topic;
   }

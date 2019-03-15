@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 public class OrderedRocketMqConsumer extends AbstractRocketMqConsumer {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  OrderedRocketMqConsumer(String brokerAddress,
+  public OrderedRocketMqConsumer(String brokerAddress,
       String groupName,
       String topic,
       String tag,
