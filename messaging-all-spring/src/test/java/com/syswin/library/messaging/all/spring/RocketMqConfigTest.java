@@ -4,8 +4,12 @@ import static com.seanyinx.github.unit.scaffolding.Randomness.uniquify;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.waitAtMost;
 
+import com.syswin.library.messaging.MqConsumer;
+import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.all.spring.containers.RocketMqBrokerContainer;
 import com.syswin.library.messaging.all.spring.containers.RocketMqNameServerContainer;
+import com.syswin.library.messaging.rocketmq.ConcurrentRocketMqConsumer;
+import com.syswin.library.messaging.rocketmq.RocketMqProducer;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.junit.AfterClass;
@@ -67,5 +71,15 @@ public class RocketMqConfigTest extends MqConfigTestBase {
         return false;
       }
     });
+  }
+
+  @Override
+  Class<? extends MqConsumer> consumerType() {
+    return ConcurrentRocketMqConsumer.class;
+  }
+
+  @Override
+  Class<? extends MqProducer> producerType() {
+    return RocketMqProducer.class;
   }
 }

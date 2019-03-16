@@ -41,11 +41,13 @@ public class MqConfigTestApp {
       @Value("${app.consumer.tag}") String tag,
       Consumer<String> listener
   ) {
-    return new MqConsumerConfig(group,
-        topic,
-        tag,
-        CLUSTER,
-        listener,
-        true);
+    return MqConsumerConfig.create()
+        .group(group)
+        .topic(topic)
+        .tag(tag)
+        .type(CLUSTER)
+        .listener(listener)
+        .concurrent()
+        .build();
   }
 }

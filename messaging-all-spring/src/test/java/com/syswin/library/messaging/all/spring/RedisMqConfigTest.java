@@ -1,6 +1,10 @@
 package com.syswin.library.messaging.all.spring;
 
+import com.syswin.library.messaging.MqConsumer;
+import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.all.spring.containers.RedisContainer;
+import com.syswin.library.messaging.redis.spring.RedisMqConsumer;
+import com.syswin.library.messaging.redis.spring.RedisMqProducer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -22,5 +26,15 @@ public class RedisMqConfigTest extends MqConfigTestBase {
     System.clearProperty("spring.redis.host");
     System.clearProperty("spring.redis.port");
     System.clearProperty("library.messaging.type");
+  }
+
+  @Override
+  Class<? extends MqConsumer> consumerType() {
+    return RedisMqConsumer.class;
+  }
+
+  @Override
+  Class<? extends MqProducer> producerType() {
+    return RedisMqProducer.class;
   }
 }

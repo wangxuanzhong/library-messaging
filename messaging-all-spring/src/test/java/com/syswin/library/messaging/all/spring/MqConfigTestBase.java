@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.syswin.library.messaging.MessagingException;
+import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.test.spring.MqConfigTestApp;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import org.junit.Test;
@@ -23,13 +25,16 @@ import org.springframework.test.context.junit4.SpringRunner;
     "app.consumer.topic=" + EmbeddedMqConfigTest.TOPIC,
     "app.consumer.tag=*"
 }, classes = MqConfigTestApp.class)
-public class MqConfigTestBase {
+public abstract class MqConfigTestBase {
 
   static final String TOPIC = "brave-new-world";
   private static final String MESSAGE = "hello";
 
   @Autowired
   private Map<String, MqProducer> producers;
+
+  @Autowired
+  private List<MqConsumer> consumers;
 
   @Autowired
   private Queue<String> messages;
@@ -42,5 +47,11 @@ public class MqConfigTestBase {
     await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(1));
 
     assertThat(messages).containsExactlyInAnyOrder(MESSAGE);
+    producers.values().forEach(p -> assertThat(p).isInstanceOf(producerType()));
+    consumers.forEach(c -> assertThat(c).isInstanceOf(consumerType()));
   }
+
+  abstract Class<? extends MqConsumer> consumerType();
+
+  abstract Class<? extends MqProducer> producerType();
 }

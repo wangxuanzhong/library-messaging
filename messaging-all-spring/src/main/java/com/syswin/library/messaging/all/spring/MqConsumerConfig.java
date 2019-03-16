@@ -13,15 +13,11 @@ public class MqConsumerConfig {
   private final Consumer<String> listener;
   private final boolean concurrent;
 
-  public MqConsumerConfig(String group, String topic, Consumer<String> listener) {
-    this(group, topic, "", listener);
+  public static Builder create() {
+    return new Builder();
   }
 
-  public MqConsumerConfig(String group, String topic, String tag, Consumer<String> listener) {
-    this(group, topic, tag, CLUSTER, listener, true);
-  }
-
-  public MqConsumerConfig(String group, String topic, String tag, MqConsumerType type, Consumer<String> listener, boolean concurrent) {
+  private MqConsumerConfig(String group, String topic, String tag, MqConsumerType type, Consumer<String> listener, boolean concurrent) {
     this.topic = topic;
     this.tag = tag;
     this.type = type;
@@ -52,5 +48,57 @@ public class MqConsumerConfig {
 
   public boolean isConcurrent() {
     return concurrent;
+  }
+
+  public static class Builder {
+
+    private String group;
+    private String topic;
+    private Consumer<String> listener;
+    private String tag = "";
+    private MqConsumerType type = CLUSTER;
+    private boolean concurrent = true;
+
+    private Builder() {
+    }
+
+    public Builder group(String group) {
+      this.group = group;
+      return this;
+    }
+
+    public Builder topic(String topic) {
+      this.topic = topic;
+      return this;
+    }
+
+    public Builder listener(Consumer<String> listener) {
+      this.listener = listener;
+      return this;
+    }
+
+    public Builder tag(String tag) {
+      this.tag = tag;
+      return this;
+    }
+
+    public Builder type(MqConsumerType type) {
+      this.type = type;
+      return this;
+    }
+
+    public Builder concurrent() {
+      this.concurrent = true;
+      return this;
+    }
+
+    public Builder sequential() {
+      this.concurrent = false;
+      return this;
+    }
+
+    public MqConsumerConfig build() {
+      return new MqConsumerConfig(group, topic, tag, type, listener, concurrent);
+    }
   }
 }
