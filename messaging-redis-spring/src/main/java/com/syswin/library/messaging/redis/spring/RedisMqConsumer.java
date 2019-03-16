@@ -30,7 +30,8 @@ public class RedisMqConsumer implements MqConsumer, MessageListener {
     messageListener.accept(message.toString());
   }
 
-  String topic() {
+  @Override
+  public String topic() {
     return topic;
   }
 }

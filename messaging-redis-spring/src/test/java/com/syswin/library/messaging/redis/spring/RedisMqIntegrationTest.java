@@ -5,10 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.syswin.library.messaging.MqProducer;
-import com.syswin.library.messaging.redis.spring.RedisMqIntegrationTest.Config;
 import com.syswin.library.messaging.redis.spring.containers.RedisContainer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.junit.After;
@@ -20,14 +21,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {RedisTestApp.class, Config.class})
+@SpringBootTest(classes = {RedisTestApp.class})
 public class RedisMqIntegrationTest {
 
   private static final String topic = "brave-new-world";
@@ -42,6 +43,8 @@ public class RedisMqIntegrationTest {
   public static final RedisContainer redis = new RedisContainer();
 
   private static final Queue<String> messages = new ConcurrentLinkedQueue<>();
+  private final ExecutorService executor = Executors.newFixedThreadPool(2);
+  private final RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 
   @Autowired
   private RedisConnectionFactory connectionFactory;
@@ -74,11 +77,18 @@ public class RedisMqIntegrationTest {
   public void setUp() throws Exception {
     mqProducer = new RedisMqProducer(redisTemplate);
     mqProducer.start();
+
+    container.setConnectionFactory(connectionFactory);
+    container.addMessageListener(mqConsumer, new ChannelTopic(mqConsumer.topic()));
+    container.setSubscriptionExecutor(executor);
+    container.setTaskExecutor(executor);
+    container.start();
   }
 
   @After
-  public void tearDown() {
+  public void tearDown() throws Exception {
     mqProducer.shutdown();
+    container.destroy();
   }
 
   @Test
@@ -91,15 +101,6 @@ public class RedisMqIntegrationTest {
     await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(3));
 
     assertThat(messages).containsExactlyInAnyOrder(message1, message2, message3);
-  }
-
-  @Configuration
-  static class Config {
-
-    @Bean
-    RedisMqConsumer mqConsumer() {
-      return mqConsumer;
-    }
   }
 
   private static class ExceptionThrowingConsumer implements Consumer<String> {

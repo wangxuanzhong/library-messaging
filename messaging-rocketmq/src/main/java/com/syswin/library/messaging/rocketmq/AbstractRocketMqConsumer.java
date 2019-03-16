@@ -69,6 +69,11 @@ abstract class AbstractRocketMqConsumer implements MqConsumer {
     log.info("Rocket MQ consumer {} in group {} shut down successfully", consumer.getInstanceName(), consumer.getConsumerGroup());
   }
 
+  @Override
+  public String topic() {
+    return topic;
+  }
+
   final void consume(List<MessageExt> messages) {
     for (MessageExt msg : messages) {
       log.debug("Rocket MQ consumer received message {} on topic {} tag {}", msg, topic, tag);

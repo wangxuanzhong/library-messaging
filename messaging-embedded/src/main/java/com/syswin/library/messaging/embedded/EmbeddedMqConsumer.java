@@ -24,4 +24,9 @@ public class EmbeddedMqConsumer implements MqConsumer {
   public void shutdown() {
 
   }
+
+  @Override
+  public String topic() {
+    return topic;
+  }
 }

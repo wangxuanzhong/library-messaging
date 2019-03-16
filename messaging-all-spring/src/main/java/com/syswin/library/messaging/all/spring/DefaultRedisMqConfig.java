@@ -11,15 +11,30 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @ConditionalOnProperty(value = "library.messaging.type", havingValue = "redis")
 @Configuration
 class DefaultRedisMqConfig {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+  @ConditionalOnMissingBean
+  @Bean
+  RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    redisTemplate.setConnectionFactory(connectionFactory);
+    redisTemplate.setKeySerializer(new StringRedisSerializer());
+    redisTemplate.setValueSerializer(new StringRedisSerializer());
+    return redisTemplate;
+  }
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
@@ -49,5 +64,14 @@ class DefaultRedisMqConfig {
               config.listener());
         })
         .collect(Collectors.toList());
+  }
+
+  @ConditionalOnBean(MqConsumerConfig.class)
+  @Bean(destroyMethod = "destroy")
+  RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory, List<RedisMqConsumer> mqConsumer) {
+    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+    container.setConnectionFactory(connectionFactory);
+    mqConsumer.forEach(consumer -> container.addMessageListener(consumer, new ChannelTopic(consumer.topic())));
+    return container;
   }
 }

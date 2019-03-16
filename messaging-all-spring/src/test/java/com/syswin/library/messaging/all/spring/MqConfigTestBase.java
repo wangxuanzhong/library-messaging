@@ -34,7 +34,7 @@ public abstract class MqConfigTestBase {
   private Map<String, MqProducer> producers;
 
   @Autowired
-  private List<MqConsumer> consumers;
+  private List<? extends MqConsumer> consumers;
 
   @Autowired
   private Queue<String> messages;
