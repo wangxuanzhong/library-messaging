@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 class DefaultRedisMqConfig {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+  @ConditionalOnBean(MqProducerConfig.class)
   @Bean
   Map<String, MqProducer> rocketMqProducers(
       RedisTemplate<String, Object> redisTemplate,
@@ -34,6 +36,7 @@ class DefaultRedisMqConfig {
     return mqProducers;
   }
 
+  @ConditionalOnBean(MqConsumerConfig.class)
   @Bean
   List<RedisMqConsumer> rocketMqConsumers(
       List<MqConsumerConfig> mqConsumerConfigs

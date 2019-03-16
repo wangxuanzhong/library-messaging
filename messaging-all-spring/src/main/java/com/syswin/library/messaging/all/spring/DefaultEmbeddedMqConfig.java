@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,10 +25,11 @@ class DefaultEmbeddedMqConfig {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   @Bean(initMethod = "start", destroyMethod = "shutdown")
-  MessageQueue messageQueue() {
-    return new EmbeddedMessageQueue();
+  MessageQueue messageQueue(@Value("${library.messaging.embedded.poll.interval:50}") long pollInterval) {
+    return new EmbeddedMessageQueue(pollInterval);
   }
 
+  @ConditionalOnBean(MqProducerConfig.class)
   @Bean
   Map<String, MqProducer> rocketMqProducers(
       MessageQueue messageQueue,
@@ -41,6 +44,7 @@ class DefaultEmbeddedMqConfig {
     return mqProducers;
   }
 
+  @ConditionalOnBean(MqConsumerConfig.class)
   @Bean
   List<MqConsumer> rocketMqConsumers(
       MessageQueue messageQueue,

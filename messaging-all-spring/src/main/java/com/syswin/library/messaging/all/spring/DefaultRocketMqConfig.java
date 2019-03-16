@@ -18,6 +18,7 @@ import java.util.Map;
 import javax.annotation.PreDestroy;
 import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,7 @@ class DefaultRocketMqConfig {
     consumerTypeMapping.put(CLUSTER, CLUSTERING);
   }
 
+  @ConditionalOnBean(MqProducerConfig.class)
   @Bean
   Map<String, MqProducer> rocketMqProducers(
       @Value("${library.messaging.rocketmq.broker.address}") String brokerAddress,
@@ -50,6 +52,7 @@ class DefaultRocketMqConfig {
     return mqProducers;
   }
 
+  @ConditionalOnBean(MqConsumerConfig.class)
   @Bean
   List<MqConsumer> rocketMqConsumers(
       @Value("${library.messaging.rocketmq.broker.address}") String brokerAddress,
