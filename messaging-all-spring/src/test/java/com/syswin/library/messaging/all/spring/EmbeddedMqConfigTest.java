@@ -4,20 +4,17 @@ import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.embedded.EmbeddedMqConsumer;
 import com.syswin.library.messaging.embedded.EmbeddedMqProducer;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import com.syswin.library.messaging.test.spring.MqConfigTestApp;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest(properties = {
+    "library.messaging.type=embedded",
+    "app.producer.group=producer",
+    "app.consumer.group=consumer",
+    "app.consumer.topic=" + MqConfigTestBase.TOPIC,
+    "app.consumer.tag=*"
+}, classes = MqConfigTestApp.class)
 public class EmbeddedMqConfigTest extends MqConfigTestBase {
-
-  @BeforeClass
-  public static void beforeClass() {
-    System.setProperty("library.messaging.type", "embedded");
-  }
-
-  @AfterClass
-  public static void afterClass() {
-    System.clearProperty("library.messaging.type");
-  }
 
   @Override
   Class<? extends MqConsumer> consumerType() {

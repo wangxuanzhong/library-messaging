@@ -10,14 +10,23 @@ import com.syswin.library.messaging.all.spring.containers.RocketMqBrokerContaine
 import com.syswin.library.messaging.all.spring.containers.RocketMqNameServerContainer;
 import com.syswin.library.messaging.rocketmq.ConcurrentRocketMqConsumer;
 import com.syswin.library.messaging.rocketmq.RocketMqProducer;
+import com.syswin.library.messaging.test.spring.MqConfigTestApp;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.rules.RuleChain;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.containers.Network;
 
+@SpringBootTest(properties = {
+    "library.messaging.type=rocketmq",
+    "app.producer.group=producer",
+    "app.consumer.group=consumer",
+    "app.consumer.topic=" + MqConfigTestBase.TOPIC,
+    "app.consumer.tag=*"
+}, classes = MqConfigTestApp.class)
 public class RocketMqConfigTest extends MqConfigTestBase {
   private static final String hostname = "namesrv";
   private static final int MQ_SERVER_PORT = 9876;
@@ -45,7 +54,6 @@ public class RocketMqConfigTest extends MqConfigTestBase {
   public static void beforeClass() throws MQClientException {
     brokerAddress = rocketMqNameSrv.getContainerIpAddress() + ":" + MQ_SERVER_PORT;
 
-    System.setProperty("library.messaging.type", "rocketmq");
     System.setProperty("library.messaging.rocketmq.broker.address", brokerAddress);
 
     createMqTopic();
@@ -54,7 +62,6 @@ public class RocketMqConfigTest extends MqConfigTestBase {
   @AfterClass
   public static void afterClass() {
     System.clearProperty("library.messaging.rocketmq.broker.address");
-    System.clearProperty("library.messaging.type");
   }
 
   private static void createMqTopic() throws MQClientException {

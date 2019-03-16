@@ -7,7 +7,6 @@ import static org.awaitility.Awaitility.await;
 import com.syswin.library.messaging.MessagingException;
 import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
-import com.syswin.library.messaging.test.spring.MqConfigTestApp;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
@@ -15,16 +14,9 @@ import java.util.Queue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = {
-    "app.producer.group=producer",
-    "app.consumer.group=consumer",
-    "app.consumer.topic=" + EmbeddedMqConfigTest.TOPIC,
-    "app.consumer.tag=*"
-}, classes = MqConfigTestApp.class)
 public abstract class MqConfigTestBase {
 
   static final String TOPIC = "brave-new-world";
