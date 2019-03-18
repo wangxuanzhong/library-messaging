@@ -2,13 +2,12 @@ package com.syswin.library.messaging.redis.spring;
 
 import com.syswin.library.messaging.MessageDeliverException;
 import com.syswin.library.messaging.MqProducer;
-import org.springframework.data.redis.core.RedisTemplate;
 
 public class RedisMqProducer implements MqProducer {
 
-  private final RedisTemplate<String, Object> redisTemplate;
+  private final MessageRedisTemplate redisTemplate;
 
-  public RedisMqProducer(RedisTemplate<String, Object> redisTemplate) {
+  public RedisMqProducer(MessageRedisTemplate redisTemplate) {
     this.redisTemplate = redisTemplate;
   }
 

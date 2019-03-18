@@ -1,6 +1,7 @@
 package com.syswin.library.messaging.all.spring;
 
 import com.syswin.library.messaging.MqProducer;
+import com.syswin.library.messaging.redis.spring.MessageRedisTemplate;
 import com.syswin.library.messaging.redis.spring.RedisMqConsumer;
 import com.syswin.library.messaging.redis.spring.RedisMqProducer;
 import java.lang.invoke.MethodHandles;
@@ -11,12 +12,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -26,10 +25,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 class DefaultRedisMqConfig {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  @ConditionalOnMissingBean
+  @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-    RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+  MessageRedisTemplate redisTemplate(RedisConnectionFactory connectionFactory) {
+    MessageRedisTemplate redisTemplate = new MessageRedisTemplate();
     redisTemplate.setConnectionFactory(connectionFactory);
     redisTemplate.setKeySerializer(new StringRedisSerializer());
     redisTemplate.setValueSerializer(new StringRedisSerializer());
@@ -39,7 +38,7 @@ class DefaultRedisMqConfig {
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
   Map<String, MqProducer> rocketMqProducers(
-      RedisTemplate<String, Object> redisTemplate,
+      MessageRedisTemplate redisTemplate,
       List<MqProducerConfig> mqProducerConfigs
   ) {
     Map<String, MqProducer> mqProducers = new HashMap<>();
