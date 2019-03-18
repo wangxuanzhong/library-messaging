@@ -54,14 +54,14 @@ public class RocketMqConfigTest extends MqConfigTestBase {
   public static void beforeClass() throws MQClientException {
     brokerAddress = rocketMqNameSrv.getContainerIpAddress() + ":" + MQ_SERVER_PORT;
 
-    System.setProperty("library.messaging.rocketmq.broker.address", brokerAddress);
+    System.setProperty("spring.rocketmq.host", brokerAddress);
 
     createMqTopic();
   }
 
   @AfterClass
   public static void afterClass() {
-    System.clearProperty("library.messaging.rocketmq.broker.address");
+    System.clearProperty("spring.rocketmq.host");
   }
 
   private static void createMqTopic() throws MQClientException {

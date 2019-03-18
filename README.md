@@ -34,3 +34,10 @@
       @Autowired
       private Map<String, MqProducer> producers;
     ```
+1. 通过不同的服务启动配置参数控制使用哪种MQ
+    ```
+    library.messaging.type=embedded // Blocking Queue实现
+    library.messaging.type=redis    // Redis MQ实现
+    library.messaging.type=rocketmq // Rocket MQ实现
+    spring.rocketmq.host=rocketmq.syswin.com
+    ```

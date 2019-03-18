@@ -39,7 +39,7 @@ class DefaultRocketMqConfig {
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
   Map<String, MqProducer> rocketMqProducers(
-      @Value("${library.messaging.rocketmq.broker.address}") String brokerAddress,
+      @Value("${spring.rocketmq.host}") String brokerAddress,
       List<MqProducerConfig> mqProducerConfigs
   ) throws MessagingException {
 
@@ -55,7 +55,7 @@ class DefaultRocketMqConfig {
   @ConditionalOnBean(MqConsumerConfig.class)
   @Bean
   List<MqConsumer> rocketMqConsumers(
-      @Value("${library.messaging.rocketmq.broker.address}") String brokerAddress,
+      @Value("${spring.rocketmq.host}") String brokerAddress,
       List<MqConsumerConfig> mqConsumerConfigs
   ) throws MessagingException {
 
