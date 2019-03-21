@@ -12,6 +12,9 @@ import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.all.spring.containers.RedisContainer;
 import com.syswin.library.messaging.all.spring.containers.RocketMqBrokerContainer;
 import com.syswin.library.messaging.all.spring.containers.RocketMqNameServerContainer;
+import com.syswin.library.messaging.embedded.EmbeddedMqProducer;
+import com.syswin.library.messaging.redis.spring.RedisMqProducer;
+import com.syswin.library.messaging.rocketmq.RocketMqProducer;
 import com.syswin.library.messaging.test.mixed.MixedMqConfigTestApp;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -121,5 +124,9 @@ public class MixedMqConfigTest {
     await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(3));
 
     assertThat(messages).containsAll(sentMessages);
+
+    assertThat(producers.get("redis")).isInstanceOf(RedisMqProducer.class);
+    assertThat(producers.get("rocketmq")).isInstanceOf(RocketMqProducer.class);
+    assertThat(producers.get("embedded")).isInstanceOf(EmbeddedMqProducer.class);
   }
 }

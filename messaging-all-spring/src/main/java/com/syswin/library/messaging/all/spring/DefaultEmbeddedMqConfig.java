@@ -33,7 +33,7 @@ class DefaultEmbeddedMqConfig {
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  Map<String, EmbeddedMqProducer> embeddedMqProducers(
+  Map<String, EmbeddedMqProducer> libraryEmbeddedMqProducers(
       MessageQueue messageQueue,
       Map<String, MqProducer> mqProducers,
       List<MqProducerConfig> mqProducerConfigs
@@ -51,7 +51,7 @@ class DefaultEmbeddedMqConfig {
 
   @ConditionalOnBean(MqConsumerConfig.class)
   @Bean
-  List<EmbeddedMqConsumer> embeddedMqConsumers(
+  List<EmbeddedMqConsumer> libraryEmbeddedMqConsumers(
       MessageQueue messageQueue,
       List<MqConsumer> mqConsumers,
       List<MqConsumerConfig> mqConsumerConfigs

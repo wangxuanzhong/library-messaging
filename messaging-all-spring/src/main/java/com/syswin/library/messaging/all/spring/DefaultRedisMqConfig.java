@@ -30,7 +30,7 @@ class DefaultRedisMqConfig {
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  MessageRedisTemplate redisTemplate(RedisConnectionFactory connectionFactory) {
+  MessageRedisTemplate libraryRedisTemplate(RedisConnectionFactory connectionFactory) {
     MessageRedisTemplate redisTemplate = new MessageRedisTemplate();
     redisTemplate.setConnectionFactory(connectionFactory);
     redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -40,7 +40,7 @@ class DefaultRedisMqConfig {
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  Map<String, RedisMqProducer> redisMqProducers(
+  Map<String, RedisMqProducer> libraryRedisMqProducers(
       MessageRedisTemplate redisTemplate,
       Map<String, MqProducer> mqProducers,
       List<MqProducerConfig> mqProducerConfigs
