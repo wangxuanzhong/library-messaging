@@ -1,5 +1,8 @@
 package com.syswin.library.messaging.all.spring;
 
+import static com.syswin.library.messaging.all.spring.MqImplementation.REDIS;
+
+import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.redis.spring.MessageRedisTemplate;
 import com.syswin.library.messaging.redis.spring.RedisMqConsumer;
@@ -20,7 +23,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-@ConditionalOnProperty(value = "library.messaging.type", havingValue = "redis")
+@ConditionalOnProperty(value = "library.messaging.redis.enabled", havingValue = "true")
 @Configuration
 class DefaultRedisMqConfig {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -37,25 +40,27 @@ class DefaultRedisMqConfig {
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  Map<String, MqProducer> rocketMqProducers(
+  Map<String, RedisMqProducer> redisMqProducers(
       MessageRedisTemplate redisTemplate,
+      Map<String, MqProducer> mqProducers,
       List<MqProducerConfig> mqProducerConfigs
   ) {
-    Map<String, MqProducer> mqProducers = new HashMap<>();
-    mqProducerConfigs.forEach(config -> {
-      mqProducers.put(config.group(), new RedisMqProducer(redisTemplate));
-      log.info("Started Redis MQ producer of group {}", config.group());
-    });
-
-    return mqProducers;
+    Map<String, RedisMqProducer> redisMqProducers = new HashMap<>();
+    mqProducerConfigs.stream()
+        .filter(config -> REDIS == config.implementation())
+        .forEach(config -> {
+          redisMqProducers.put(config.group(), new RedisMqProducer(redisTemplate));
+          log.info("Started Redis MQ producer of group {}", config.group());
+        });
+    mqProducers.putAll(redisMqProducers);
+    return redisMqProducers;
   }
 
-  @ConditionalOnBean(MqConsumerConfig.class)
-  @Bean
-  List<RedisMqConsumer> rocketMqConsumers(
+  private List<RedisMqConsumer> redisMqConsumers(
       List<MqConsumerConfig> mqConsumerConfigs
   ) {
     return mqConsumerConfigs.stream()
+        .filter(config -> REDIS == config.implementation())
         .map(config -> {
           log.info("Started Redis MQ consumer on topic {}", config.topic());
           return new RedisMqConsumer(
@@ -67,10 +72,15 @@ class DefaultRedisMqConfig {
 
   @ConditionalOnBean(MqConsumerConfig.class)
   @Bean(destroyMethod = "destroy")
-  RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory, List<RedisMqConsumer> mqConsumer) {
+  RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory,
+      List<MqConsumerConfig> mqConsumerConfigs,
+      List<MqConsumer> mqConsumers) {
+    List<RedisMqConsumer> redisMqConsumers = redisMqConsumers(mqConsumerConfigs);
+    mqConsumers.addAll(redisMqConsumers);
+
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
-    mqConsumer.forEach(consumer -> container.addMessageListener(consumer, new ChannelTopic(consumer.topic())));
+    redisMqConsumers.forEach(consumer -> container.addMessageListener(consumer, new ChannelTopic(consumer.topic())));
     return container;
   }
 }

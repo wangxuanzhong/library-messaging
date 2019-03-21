@@ -1,5 +1,6 @@
 package com.syswin.library.messaging.all.spring;
 
+import static com.syswin.library.messaging.all.spring.MqImplementation.ROCKET_MQ;
 import static com.syswin.library.messaging.all.spring.MqConsumerType.BROADCAST;
 import static com.syswin.library.messaging.all.spring.MqConsumerType.CLUSTER;
 import static org.apache.rocketmq.common.protocol.heartbeat.MessageModel.BROADCASTING;
@@ -8,6 +9,7 @@ import static org.apache.rocketmq.common.protocol.heartbeat.MessageModel.CLUSTER
 import com.syswin.library.messaging.MessagingException;
 import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
+import com.syswin.library.messaging.rocketmq.AbstractRocketMqConsumer;
 import com.syswin.library.messaging.rocketmq.ConcurrentRocketMqConsumer;
 import com.syswin.library.messaging.rocketmq.OrderedRocketMqConsumer;
 import com.syswin.library.messaging.rocketmq.RocketMqProducer;
@@ -23,13 +25,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@ConditionalOnProperty(value = "library.messaging.type", havingValue = "rocketmq", matchIfMissing = true)
+@ConditionalOnProperty(value = "library.messaging.rocketmq.enabled", havingValue = "true")
 @Configuration
 class DefaultRocketMqConfig {
 
   private final Map<MqConsumerType, MessageModel> consumerTypeMapping = new HashMap<>();
-  private final Map<String, MqProducer> mqProducers = new HashMap<>();
-  private final List<MqConsumer> mqConsumers = new ArrayList<>();
+  private final Map<String, RocketMqProducer> rocketMqProducers = new HashMap<>();
+  private final List<AbstractRocketMqConsumer> rocketMqConsumers = new ArrayList<>();
 
   DefaultRocketMqConfig() {
     consumerTypeMapping.put(BROADCAST, BROADCASTING);
@@ -38,43 +40,51 @@ class DefaultRocketMqConfig {
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  Map<String, MqProducer> rocketMqProducers(
+  Map<String, RocketMqProducer> rocketMqProducers(
       @Value("${spring.rocketmq.host}") String brokerAddress,
+      Map<String, MqProducer> mqProducers,
       List<MqProducerConfig> mqProducerConfigs
   ) throws MessagingException {
 
     for (MqProducerConfig config : mqProducerConfigs) {
-      RocketMqProducer producer = new RocketMqProducer(brokerAddress, config.group());
-      producer.start();
-      mqProducers.put(config.group(), producer);
+      if (config.implementation() == ROCKET_MQ) {
+        RocketMqProducer producer = new RocketMqProducer(brokerAddress, config.group());
+        producer.start();
+        rocketMqProducers.put(config.group(), producer);
+      }
     }
 
-    return mqProducers;
+    mqProducers.putAll(rocketMqProducers);
+    return rocketMqProducers;
   }
 
   @ConditionalOnBean(MqConsumerConfig.class)
   @Bean
-  List<MqConsumer> rocketMqConsumers(
+  List<AbstractRocketMqConsumer> rocketMqConsumers(
       @Value("${spring.rocketmq.host}") String brokerAddress,
+      List<MqConsumer> mqConsumers,
       List<MqConsumerConfig> mqConsumerConfigs
   ) throws MessagingException {
 
     for (MqConsumerConfig config : mqConsumerConfigs) {
-      MqConsumer mqConsumer = mqConsumer(brokerAddress, config);
-      mqConsumer.start();
-      mqConsumers.add(mqConsumer);
+      if (config.implementation() == ROCKET_MQ) {
+        AbstractRocketMqConsumer mqConsumer = mqConsumer(brokerAddress, config);
+        mqConsumer.start();
+        rocketMqConsumers.add(mqConsumer);
+      }
     }
 
-    return mqConsumers;
+    mqConsumers.addAll(rocketMqConsumers);
+    return rocketMqConsumers;
   }
 
   @PreDestroy
   void shutdown() {
-    mqProducers.values().forEach(MqProducer::shutdown);
-    mqConsumers.forEach(MqConsumer::shutdown);
+    rocketMqProducers.values().forEach(MqProducer::shutdown);
+    rocketMqConsumers.forEach(MqConsumer::shutdown);
   }
 
-  private MqConsumer mqConsumer(String brokerAddress, MqConsumerConfig config) {
+  private AbstractRocketMqConsumer mqConsumer(String brokerAddress, MqConsumerConfig config) {
     if (config.isConcurrent()) {
       return new ConcurrentRocketMqConsumer(
           brokerAddress,

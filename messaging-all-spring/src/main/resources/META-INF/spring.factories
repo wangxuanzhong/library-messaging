@@ -1,4 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.syswin.library.messaging.all.spring.DefaultMqConfig,\
   com.syswin.library.messaging.all.spring.DefaultEmbeddedMqConfig,\
   com.syswin.library.messaging.all.spring.DefaultRedisMqConfig,\
   com.syswin.library.messaging.all.spring.DefaultRocketMqConfig

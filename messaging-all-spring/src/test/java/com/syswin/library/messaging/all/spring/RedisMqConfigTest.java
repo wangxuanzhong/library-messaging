@@ -12,9 +12,11 @@ import org.junit.ClassRule;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(properties = {
-    "library.messaging.type=redis",
+    "library.messaging.redis.enabled=true",
     "app.producer.group=producer",
+    "app.producer.implementation=redis",
     "app.consumer.group=consumer",
+    "app.consumer.implementation=redis",
     "app.consumer.topic=" + MqConfigTestBase.TOPIC,
     "app.consumer.tag=*"
 }, classes = MqConfigTestApp.class)

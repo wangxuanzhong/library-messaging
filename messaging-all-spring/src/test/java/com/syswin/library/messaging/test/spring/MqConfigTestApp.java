@@ -2,6 +2,7 @@ package com.syswin.library.messaging.test.spring;
 
 import static com.syswin.library.messaging.all.spring.MqConsumerType.CLUSTER;
 
+import com.syswin.library.messaging.all.spring.MqImplementation;
 import com.syswin.library.messaging.all.spring.MqConsumerConfig;
 import com.syswin.library.messaging.all.spring.MqProducerConfig;
 import java.util.Queue;
@@ -30,13 +31,14 @@ public class MqConfigTestApp {
   }
 
   @Bean
-  MqProducerConfig producerConfig(@Value("${app.producer.group}") String group) {
-    return new MqProducerConfig(group);
+  MqProducerConfig producerConfig(@Value("${app.producer.group}") String group, @Value("${app.producer.implementation}") String implementation) {
+    return new MqProducerConfig(group, MqImplementation.valueOf(implementation.toUpperCase()));
   }
 
   @Bean
   MqConsumerConfig consumerConfig(
       @Value("${app.consumer.group}") String group,
+      @Value("${app.consumer.implementation}") String implementation,
       @Value("${app.consumer.topic}") String topic,
       @Value("${app.consumer.tag}") String tag,
       Consumer<String> listener
@@ -46,6 +48,7 @@ public class MqConfigTestApp {
         .topic(topic)
         .tag(tag)
         .type(CLUSTER)
+        .implementation(MqImplementation.valueOf(implementation.toUpperCase()))
         .listener(listener)
         .concurrent()
         .build();

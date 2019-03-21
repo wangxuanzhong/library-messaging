@@ -8,9 +8,11 @@ import com.syswin.library.messaging.test.spring.MqConfigTestApp;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(properties = {
-    "library.messaging.type=embedded",
+    "library.messaging.embedded.enabled=true",
     "app.producer.group=producer",
+    "app.producer.implementation=embedded",
     "app.consumer.group=consumer",
+    "app.consumer.implementation=embedded",
     "app.consumer.topic=" + MqConfigTestBase.TOPIC,
     "app.consumer.tag=*"
 }, classes = MqConfigTestApp.class)

@@ -10,6 +10,7 @@ public class MqConsumerConfig {
   private final String topic;
   private final String tag;
   private final MqConsumerType type;
+  private final MqImplementation mqImplementation;
   private final Consumer<String> listener;
   private final boolean concurrent;
 
@@ -17,10 +18,17 @@ public class MqConsumerConfig {
     return new Builder();
   }
 
-  private MqConsumerConfig(String group, String topic, String tag, MqConsumerType type, Consumer<String> listener, boolean concurrent) {
+  private MqConsumerConfig(String group,
+      String topic,
+      String tag,
+      MqConsumerType type,
+      MqImplementation mqImplementation,
+      Consumer<String> listener,
+      boolean concurrent) {
     this.topic = topic;
     this.tag = tag;
     this.type = type;
+    this.mqImplementation = mqImplementation;
     this.listener = listener;
     this.concurrent = concurrent;
     this.group = group;
@@ -42,6 +50,10 @@ public class MqConsumerConfig {
     return type;
   }
 
+  public MqImplementation implementation() {
+    return mqImplementation;
+  }
+
   public Consumer<String> listener() {
     return listener;
   }
@@ -57,6 +69,7 @@ public class MqConsumerConfig {
     private Consumer<String> listener;
     private String tag = "";
     private MqConsumerType type = CLUSTER;
+    private MqImplementation implementation;
     private boolean concurrent = true;
 
     private Builder() {
@@ -87,6 +100,11 @@ public class MqConsumerConfig {
       return this;
     }
 
+    public Builder implementation(MqImplementation implementation) {
+      this.implementation = implementation;
+      return this;
+    }
+
     public Builder concurrent() {
       this.concurrent = true;
       return this;
@@ -98,7 +116,7 @@ public class MqConsumerConfig {
     }
 
     public MqConsumerConfig build() {
-      return new MqConsumerConfig(group, topic, tag, type, listener, concurrent);
+      return new MqConsumerConfig(group, topic, tag, type, implementation, listener, concurrent);
     }
   }
 }

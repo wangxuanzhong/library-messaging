@@ -1,5 +1,7 @@
 package com.syswin.library.messaging.all.spring;
 
+import static com.syswin.library.messaging.all.spring.MqImplementation.EMBEDDED;
+
 import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.embedded.EmbeddedMessageQueue;
@@ -19,7 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@ConditionalOnProperty(value = "library.messaging.type", havingValue = "embedded")
+@ConditionalOnProperty(value = "library.messaging.embedded.enabled", havingValue = "true")
 @Configuration
 class DefaultEmbeddedMqConfig {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -31,28 +33,36 @@ class DefaultEmbeddedMqConfig {
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  Map<String, MqProducer> rocketMqProducers(
+  Map<String, EmbeddedMqProducer> embeddedMqProducers(
       MessageQueue messageQueue,
+      Map<String, MqProducer> mqProducers,
       List<MqProducerConfig> mqProducerConfigs
   ) {
-    Map<String, MqProducer> mqProducers = new HashMap<>();
-    mqProducerConfigs.forEach(config -> {
-      mqProducers.put(config.group(), new EmbeddedMqProducer(messageQueue));
-      log.info("Started embedded MQ producer of group {}", config.group());
-    });
-
-    return mqProducers;
+    Map<String, EmbeddedMqProducer> embeddedMqProducers = new HashMap<>();
+    mqProducerConfigs.stream()
+        .filter(config -> EMBEDDED == config.implementation())
+        .forEach(config -> {
+          embeddedMqProducers.put(config.group(), new EmbeddedMqProducer(messageQueue));
+          log.info("Started embedded MQ producer of group {}", config.group());
+        });
+    mqProducers.putAll(embeddedMqProducers);
+    return embeddedMqProducers;
   }
 
   @ConditionalOnBean(MqConsumerConfig.class)
   @Bean
-  List<MqConsumer> rocketMqConsumers(
+  List<EmbeddedMqConsumer> embeddedMqConsumers(
       MessageQueue messageQueue,
+      List<MqConsumer> mqConsumers,
       List<MqConsumerConfig> mqConsumerConfigs
   ) {
-    return mqConsumerConfigs.stream()
+    List<EmbeddedMqConsumer> embeddedMqConsumers = mqConsumerConfigs.stream()
+        .filter(config -> EMBEDDED == config.implementation())
         .map(config -> createMqConsumer(messageQueue, config))
         .collect(Collectors.toList());
+
+    mqConsumers.addAll(embeddedMqConsumers);
+    return embeddedMqConsumers;
   }
 
   private EmbeddedMqConsumer createMqConsumer(MessageQueue messageQueue, MqConsumerConfig config) {

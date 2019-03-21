@@ -9,7 +9,7 @@
     ```java
       @Bean
       MqProducerConfig producerConfig(String group) {
-        return new MqProducerConfig(group);
+        return new MqProducerConfig(group, ROCKET_MQ);
       }
     
       @Bean
@@ -24,6 +24,7 @@
             .topic(topic)
             .tag(tag)      // 默认为""
             .type(CLUSTER) // 默认为集群模式
+            .implementation(ROCKET_MQ)
             .listener(listener)
             .concurrent()  // 默认为并行消费模式
             .build();
@@ -36,8 +37,8 @@
     ```
 1. 通过不同的服务启动配置参数控制使用哪种MQ
     ```
-    library.messaging.type=embedded // Blocking Queue实现
-    library.messaging.type=redis    // Redis MQ实现
-    library.messaging.type=rocketmq // Rocket MQ实现
+    library.messaging.embedded.enabled=true // Blocking Queue实现
+    library.messaging.redis.enabled=true    // Redis MQ实现
+    library.messaging.rocketmq.enabled=true // Rocket MQ实现
     spring.rocketmq.host=rocketmq.syswin.com
     ```
