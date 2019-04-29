@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Awaitility.waitAtMost;
 
-import com.syswin.library.messaging.MessageDeliverException;
+import com.syswin.library.messaging.MessageClientException;
 import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.rocketmq.containers.RocketMqBrokerContainer;
@@ -126,8 +126,8 @@ public class RocketMqIntegrationTest {
     rocketMqProducer.shutdown();
     try {
       rocketMqProducer.sendRandomly(message1, topic);
-      expectFailing(MessageDeliverException.class);
-    } catch (MessageDeliverException ignored) {
+      expectFailing(MessageClientException.class);
+    } catch (MessageClientException ignored) {
     }
   }
 }
