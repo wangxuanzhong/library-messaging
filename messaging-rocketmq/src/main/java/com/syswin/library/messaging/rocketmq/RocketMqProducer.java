@@ -1,6 +1,7 @@
 package com.syswin.library.messaging.rocketmq;
 
 import com.syswin.library.messaging.MessageBrokerException;
+import com.syswin.library.messaging.MessageClientException;
 import com.syswin.library.messaging.MessageDeliverException;
 import com.syswin.library.messaging.MessagingException;
 import com.syswin.library.messaging.MqProducer;
@@ -88,11 +89,15 @@ public class RocketMqProducer implements MqProducer {
                 brokerAddress,
                 sendResult));
       }
-    } catch (MQClientException | RemotingException | MQBrokerException e) {
-      throw new MessageDeliverException(
-          String.format("Failed to send message with topic: %s, tag: %s, keys: %s to Rocket MQ %s", topic, tags, keys, brokerAddress),
-          e);
+    } catch (MQClientException e) {
+      throw new MessageClientException(description(topic, tags, keys), e);
+    } catch (RemotingException | MQBrokerException e) {
+      throw new MessageDeliverException(description(topic, tags, keys), e);
     }
+  }
+
+  private String description(String topic, String tags, String keys) {
+    return String.format("Failed to send message with topic: %s, tag: %s, keys: %s to Rocket MQ %s", topic, tags, keys, brokerAddress);
   }
 
   private SendResult loadBalancedSend(Message message)
@@ -100,8 +105,7 @@ public class RocketMqProducer implements MqProducer {
 
     String shardKey = message.getTags() == null ? message.getTopic() : message.getTags();
     return producer.send(message, (queues, msg, arg) -> {
-      int hash = Math.abs(arg.hashCode());
-      int index = hash % queues.size();
+      int index = Math.abs(arg.hashCode() % queues.size());
       return queues.get(index);
     }, shardKey);
   }

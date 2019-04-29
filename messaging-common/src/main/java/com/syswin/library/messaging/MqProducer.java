@@ -17,7 +17,8 @@ public interface MqProducer {
    * @throws UnsupportedEncodingException when failed to encode the message
    * @throws InterruptedException when interrupted when waiting to deliver the message
    * @throws MessageBrokerException when unexpected error occurred with MQ broker
-   * @throws MessageDeliverException when unexpected error occurred with MQ client, or connection between MQ client and broker
+   * @throws MessageClientException when unexpected error occurred with MQ client
+   * @throws MessageDeliverException when unexpected error occurred with connection between MQ client and broker
    */
   void send(String message, String topic, String tags, String keys)
       throws UnsupportedEncodingException, InterruptedException, MessagingException;
@@ -31,7 +32,8 @@ public interface MqProducer {
    * @throws UnsupportedEncodingException when failed to encode the message
    * @throws InterruptedException when interrupted when waiting to deliver the message
    * @throws MessageBrokerException when unexpected error occurred with MQ broker
-   * @throws MessageDeliverException when unexpected error occurred with MQ client, or connection between MQ client and broker
+   * @throws MessageClientException when unexpected error occurred with MQ client
+   * @throws MessageDeliverException when unexpected error occurred with connection between MQ client and broker
    */
   void sendOrderly(String message, String topic) throws InterruptedException, UnsupportedEncodingException, MessagingException;
 
@@ -44,7 +46,8 @@ public interface MqProducer {
    * @throws UnsupportedEncodingException when failed to encode the message
    * @throws InterruptedException when interrupted when waiting to deliver the message
    * @throws MessageBrokerException when unexpected error occurred with MQ broker
-   * @throws MessageDeliverException when unexpected error occurred with MQ client, or connection between MQ client and broker
+   * @throws MessageClientException when unexpected error occurred with MQ client
+   * @throws MessageDeliverException when unexpected error occurred with connection between MQ client and broker
    */
   void sendRandomly(String message, String topic) throws InterruptedException, UnsupportedEncodingException, MessagingException;
 
