@@ -5,13 +5,13 @@
   <groupId>com.syswin.library</groupId>
   <artifactId>library-messaging</artifactId>
   <packaging>pom</packaging>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.1.0</version>
 
   <scm>
     <connection>scm:git:${project.git.url}/library-messaging.git</connection>
     <developerConnection>scm:git:${project.git.url}/library-messaging.git</developerConnection>
     <url>${project.git.url}/library</url>
-    <tag>${project.version}</tag>
+    <tag>v1.1.0</tag>
   </scm>
 
   <modules>
@@ -40,22 +40,22 @@
       <dependency>
         <groupId>com.syswin.library</groupId>
         <artifactId>messaging-common</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.1.0</version>
       </dependency>
       <dependency>
         <groupId>com.syswin.library</groupId>
         <artifactId>messaging-rocketmq</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.1.0</version>
       </dependency>
       <dependency>
         <groupId>com.syswin.library</groupId>
         <artifactId>messaging-redis-spring</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.1.0</version>
       </dependency>
       <dependency>
         <groupId>com.syswin.library</groupId>
         <artifactId>messaging-embedded</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.1.0</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
