@@ -1,8 +1,10 @@
 package com.syswin.library.messaging.rocketmqons;
 
+import static com.seanyinx.github.unit.scaffolding.Randomness.uniquify;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.waitAtMost;
 
 import com.aliyun.openservices.ons.api.PropertyValueConst;
 import com.syswin.library.messaging.MessagingException;
@@ -10,33 +12,78 @@ import com.syswin.library.messaging.MqConsumer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.testcontainers.containers.Network;
 
 @Slf4j
 public class ProducerAndConsumerTest {
 
-  protected static final String topic = "simpleTopic";
-  protected static final String orderTopic = "PartitionOrderTopic";
-  protected static final String tag = "*";
-  protected static final String message1 = "message1";
-  protected static final String message2 = "message2";
-  protected static final String message3 = "message3";
-  private static final String NAMESRV_ADDR = "localhost:9876";
-  private static final String ACCESS_KEY = "access_key";
-  private static final String SECRET_KEY = "secret_key";
-  private static final String GROUP_ID = "GID-temail-test";
-  protected static final RocketMqOnsConfig mqConfig = new RocketMqOnsConfig(NAMESRV_ADDR, ACCESS_KEY, SECRET_KEY, GROUP_ID);
+  private static final String topic = "simpleTopic";
+  private static final String orderTopic = "PartitionOrderTopic";
+  private static final String tag = "*";
+  private static final String message1 = "message1";
+  private static final String message2 = "message2";
+  private static final String message3 = "message3";
 
-  Queue<String> messagesQueue = new ConcurrentLinkedQueue<>();
+  private static final String ACCESS_KEY = uniquify("access_key");
+  private static final String SECRET_KEY = uniquify("secret_key");
+  private static final String GROUP_ID = "GID-temail-test";
+
+  private static final Network NETWORK = Network.newNetwork();
+  private static final String hostname = "namesrv";
+  private static final int MQ_SERVER_PORT = 9876;
+
+  private static final RocketMqNameServerContainer rocketMqNameSrv = new RocketMqNameServerContainer()
+      .withNetwork(NETWORK)
+      .withNetworkAliases(hostname)
+      .withFixedExposedPort(MQ_SERVER_PORT, MQ_SERVER_PORT);
+
+  private static final RocketMqBrokerContainer rocketMqBroker = new RocketMqBrokerContainer()
+      .withNetwork(NETWORK)
+      .withEnv("NAMESRV_ADDR", hostname + ":" + MQ_SERVER_PORT)
+      .withFixedExposedPort(10909, 10909)
+      .withFixedExposedPort(10911, 10911);
+
+  private static final DefaultMQProducer producer = new DefaultMQProducer(uniquify("test-producer-group"));
+
+  @ClassRule
+  public static final RuleChain rules = RuleChain.outerRule(rocketMqNameSrv).around(rocketMqBroker);
+
+  private static final RocketMqOnsConfig mqConfig = new RocketMqOnsConfig(rocketMqNameSrv.getContainerIpAddress() + ":" + MQ_SERVER_PORT, ACCESS_KEY, SECRET_KEY, GROUP_ID);
+
+  private final Queue<String> messagesQueue = new ConcurrentLinkedQueue<>();
 
   private MqConsumer mqConsumer;
   private RocketMqOnsProducer mqProducer;
 
   @BeforeClass
-  public static void init() {
+  public static void init() throws MQClientException {
     System.setProperty("rocketmq.client.rebalance.lockInterval", "1000");
+    createMqTopic(topic, orderTopic);
+  }
+
+  private static void createMqTopic(String... topics) throws MQClientException {
+    producer.setNamesrvAddr(rocketMqNameSrv.getContainerIpAddress() + ":" + MQ_SERVER_PORT);
+    producer.start();
+
+    // ensure topic exists before consumer connects, or no message will be received
+    waitAtMost(10, SECONDS).until(() -> {
+      try {
+        for (String topic : topics) {
+          producer.createTopic(producer.getCreateTopicKey(), topic, 4);
+        }
+        return true;
+      } catch (MQClientException e) {
+        e.printStackTrace();
+        return false;
+      }
+    });
   }
 
   @After
