@@ -6,4 +6,6 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   com.syswin.library.messaging.all.spring.DefaultRedisMqConsumerConfig,\
   com.syswin.library.messaging.all.spring.DefaultRedisMqProducerConfig,\
   com.syswin.library.messaging.all.spring.DefaultRocketMqConsumerConfig,\
-  com.syswin.library.messaging.all.spring.DefaultRocketMqProducerConfig
+  com.syswin.library.messaging.all.spring.DefaultRocketMqProducerConfig,\
+  com.syswin.library.messaging.all.spring.DefaultRocketMqOnsConsumerConfig,\
+  com.syswin.library.messaging.all.spring.DefaultRocketMqOnsProducerConfig

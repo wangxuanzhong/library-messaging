@@ -32,6 +32,10 @@
     </dependency>
     <dependency>
       <groupId>com.syswin.library</groupId>
+      <artifactId>messaging-rocketmqons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.syswin.library</groupId>
       <artifactId>messaging-embedded</artifactId>
     </dependency>
     <dependency>

@@ -11,22 +11,21 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractRocketMqConsumer implements MqConsumer {
+public abstract class AbstractRocketMqOnsConsumer<C extends Admin> implements MqConsumer {
 
-  protected static final Logger log = LoggerFactory.getLogger(AbstractRocketMqConsumer.class);
-
+  protected static final Logger log = LoggerFactory.getLogger(AbstractRocketMqOnsConsumer.class);
+  protected final C rmqConsumer;
   private final String topic;
   private final String tag;
   private final Consumer<String> messageConsumer;
   protected Properties consumerProperties;
-  protected final Admin rmqConsumer;
 
   /**
    * @param topic
    * @param tag
    * @param messageConsumer
    */
-  AbstractRocketMqConsumer(RocketMqConfig mqConfig, String topic, String tag, String messageModel,
+  AbstractRocketMqOnsConsumer(RocketMqOnsConfig mqConfig, String topic, String tag, String messageModel,
       Consumer<String> messageConsumer) {
     this.topic = topic;
     this.tag = tag;
@@ -45,7 +44,7 @@ public abstract class AbstractRocketMqConsumer implements MqConsumer {
     try {
       subscribe(topic, tag);
       rmqConsumer.start();
-      log.info("Rocket MQ consumer {} in group {} is listening on topic {} tag {} with namesrv {}",
+      log.debug("Rocket MQ consumer {} in group {} is listening on topic {} tag {} with namesrv {}",
           getInstanceName(),
           getGroupId(),
           topic,
@@ -60,7 +59,7 @@ public abstract class AbstractRocketMqConsumer implements MqConsumer {
   @Override
   public final void shutdown() {
     rmqConsumer.shutdown();
-    log.info("Rocket MQ consumer {} in group {} shut down successfully",
+    log.debug("Rocket MQ consumer {} in group {} shut down successfully",
         getInstanceName(),
         getGroupId());
   }
@@ -71,11 +70,11 @@ public abstract class AbstractRocketMqConsumer implements MqConsumer {
   }
 
   protected final void consume(Message message) {
-    log.info("Rocket MQ consumer received message {} on topic {} tag {}", message, topic, tag);
+    log.debug("Rocket MQ consumer received message {} on topic {} tag {}", message, topic, tag);
     messageConsumer.accept(new String(message.getBody()));
   }
 
-  protected abstract Admin createConsumer(Properties properties);
+  protected abstract C createConsumer(Properties properties);
 
   protected abstract void subscribe(String topic, String tag);
 
