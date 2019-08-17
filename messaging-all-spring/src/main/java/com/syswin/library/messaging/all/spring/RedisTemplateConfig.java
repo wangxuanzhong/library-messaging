@@ -24,10 +24,24 @@
 
 package com.syswin.library.messaging.all.spring;
 
-public enum MqImplementation {
-  ROCKET_MQ,
-  ROCKET_MQ_ONS,
-  REDIS,
-  REDIS_PERSISTENCE,
-  EMBEDDED
+import com.syswin.library.messaging.redis.spring.MessageRedisTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+@ConditionalOnExpression("${library.messaging.redis.enabled} or ${library.messaging.redis-persistence.enabled}")
+@ConditionalOnBean(MqProducerConfig.class)
+@Configuration
+class RedisTemplateConfig {
+  @Bean
+  MessageRedisTemplate redisTemplate(RedisConnectionFactory connectionFactory) {
+    MessageRedisTemplate redisTemplate = new MessageRedisTemplate();
+    redisTemplate.setConnectionFactory(connectionFactory);
+    redisTemplate.setKeySerializer(new StringRedisSerializer());
+    redisTemplate.setValueSerializer(new StringRedisSerializer());
+    return redisTemplate;
+  }
 }

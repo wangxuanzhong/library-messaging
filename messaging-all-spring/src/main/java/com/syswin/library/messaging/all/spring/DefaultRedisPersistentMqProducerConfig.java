@@ -24,40 +24,42 @@
 
 package com.syswin.library.messaging.all.spring;
 
-import static com.syswin.library.messaging.all.spring.MqImplementation.REDIS;
+import static com.syswin.library.messaging.all.spring.MqImplementation.REDIS_PERSISTENCE;
 
 import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.redis.spring.MessageRedisTemplate;
-import com.syswin.library.messaging.redis.spring.RedisMqProducer;
+import com.syswin.library.messaging.redis.spring.RedisPersistentMqProducer;
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@ConditionalOnProperty(value = "library.messaging.redis.enabled", havingValue = "true")
+@ConditionalOnProperty(value = "library.messaging.redis-persistence.enabled", havingValue = "true")
 @Configuration
-class DefaultRedisMqProducerConfig {
+class DefaultRedisPersistentMqProducerConfig {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   @ConditionalOnBean(MqProducerConfig.class)
   @Bean
-  Map<String, RedisMqProducer> libraryRedisMqProducers(
+  Map<String, RedisPersistentMqProducer> libraryRedisPersistentMqProducers(
+      @Value("${library.messaging.redis-persistence.expiry:86400}") int expiryTime,
       MessageRedisTemplate redisTemplate,
       Map<String, MqProducer> mqProducers,
       List<MqProducerConfig> mqProducerConfigs
   ) {
-    Map<String, RedisMqProducer> redisMqProducers = new HashMap<>();
+    Map<String, RedisPersistentMqProducer> redisMqProducers = new HashMap<>();
     mqProducerConfigs.stream()
-        .filter(config -> REDIS == config.implementation())
+        .filter(config -> REDIS_PERSISTENCE == config.implementation())
         .forEach(config -> {
-          redisMqProducers.put(config.group(), new RedisMqProducer(redisTemplate));
-          log.info("Started Redis MQ producer of group {}", config.group());
+          redisMqProducers.put(config.group(), new RedisPersistentMqProducer(redisTemplate, expiryTime));
+          log.info("Started Redis Persistent MQ producer of group {}", config.group());
         });
     mqProducers.putAll(redisMqProducers);
     return redisMqProducers;

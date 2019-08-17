@@ -38,6 +38,7 @@ import com.syswin.library.messaging.all.spring.containers.RocketMqBrokerContaine
 import com.syswin.library.messaging.all.spring.containers.RocketMqNameServerContainer;
 import com.syswin.library.messaging.embedded.EmbeddedMqProducer;
 import com.syswin.library.messaging.redis.spring.RedisMqProducer;
+import com.syswin.library.messaging.redis.spring.RedisPersistentMqProducer;
 import com.syswin.library.messaging.rocketmq.RocketMqProducer;
 import com.syswin.library.messaging.test.mixed.MixedMqConfigTestApp;
 import java.io.UnsupportedEncodingException;
@@ -61,6 +62,7 @@ import org.testcontainers.containers.Network;
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {
     "library.messaging.redis.enabled=true",
+    "library.messaging.redis-persistence.enabled=true",
     "library.messaging.embedded.enabled=true",
     "library.messaging.rocketmq.enabled=true",
 }, classes = MixedMqConfigTestApp.class)
@@ -145,11 +147,12 @@ public class MixedMqConfigTest {
       sentMessages.add(message);
     }
 
-    await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(3));
+    await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(4));
 
     assertThat(messages).containsAll(sentMessages);
 
     assertThat(producers.get("redis")).isInstanceOf(RedisMqProducer.class);
+    assertThat(producers.get("redis-persistence")).isInstanceOf(RedisPersistentMqProducer.class);
     assertThat(producers.get("rocketmq")).isInstanceOf(RocketMqProducer.class);
     assertThat(producers.get("embedded")).isInstanceOf(EmbeddedMqProducer.class);
   }

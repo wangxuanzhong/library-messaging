@@ -26,6 +26,7 @@ package com.syswin.library.messaging.test.mixed;
 
 import static com.syswin.library.messaging.all.spring.MqImplementation.EMBEDDED;
 import static com.syswin.library.messaging.all.spring.MqImplementation.REDIS;
+import static com.syswin.library.messaging.all.spring.MqImplementation.REDIS_PERSISTENCE;
 import static com.syswin.library.messaging.all.spring.MqImplementation.ROCKET_MQ;
 import static com.syswin.library.messaging.all.spring.MqConsumerType.CLUSTER;
 
@@ -61,6 +62,11 @@ public class MixedMqConfigTestApp {
   }
 
   @Bean
+  MqProducerConfig redisPersistentProducerConfig() {
+    return new MqProducerConfig("redis-persistence", REDIS_PERSISTENCE);
+  }
+
+  @Bean
   MqProducerConfig embeddedProducerConfig() {
     return new MqProducerConfig("embedded", EMBEDDED);
   }
@@ -77,6 +83,18 @@ public class MixedMqConfigTestApp {
         .topic("brave-new-world")
         .type(CLUSTER)
         .implementation(REDIS)
+        .listener(listener)
+        .concurrent()
+        .build();
+  }
+
+  @Bean
+  MqConsumerConfig redisPersistentConsumerConfig(Consumer<String> listener) {
+    return MqConsumerConfig.create()
+        .group("redis-persistence")
+        .topic("brave-new-world")
+        .type(CLUSTER)
+        .implementation(REDIS_PERSISTENCE)
         .listener(listener)
         .concurrent()
         .build();

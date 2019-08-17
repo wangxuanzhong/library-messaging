@@ -24,42 +24,67 @@
 
 package com.syswin.library.messaging.all.spring;
 
-import static com.syswin.library.messaging.all.spring.MqImplementation.REDIS;
+import static com.syswin.library.messaging.all.spring.MqImplementation.REDIS_PERSISTENCE;
 
-import com.syswin.library.messaging.MqProducer;
+import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.redis.spring.MessageRedisTemplate;
-import com.syswin.library.messaging.redis.spring.RedisMqProducer;
+import com.syswin.library.messaging.redis.spring.RedisPersistentMqConsumer;
 import java.lang.invoke.MethodHandles;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@ConditionalOnProperty(value = "library.messaging.redis.enabled", havingValue = "true")
+@ConditionalOnProperty(value = "library.messaging.redis-persistence.enabled", havingValue = "true")
 @Configuration
-class DefaultRedisMqProducerConfig {
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+class DefaultRedisPersistentMqConsumerConfig {
 
-  @ConditionalOnBean(MqProducerConfig.class)
-  @Bean
-  Map<String, RedisMqProducer> libraryRedisMqProducers(
+  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private final List<RedisPersistentMqConsumer> redisMqConsumers = new ArrayList<>();
+
+  private List<RedisPersistentMqConsumer> redisMqConsumers(
       MessageRedisTemplate redisTemplate,
-      Map<String, MqProducer> mqProducers,
-      List<MqProducerConfig> mqProducerConfigs
+      List<MqConsumerConfig> mqConsumerConfigs,
+      int pollingInterval
   ) {
-    Map<String, RedisMqProducer> redisMqProducers = new HashMap<>();
-    mqProducerConfigs.stream()
-        .filter(config -> REDIS == config.implementation())
+    mqConsumerConfigs.stream()
+        .filter(config -> REDIS_PERSISTENCE == config.implementation())
         .forEach(config -> {
-          redisMqProducers.put(config.group(), new RedisMqProducer(redisTemplate));
-          log.info("Started Redis MQ producer of group {}", config.group());
+          RedisPersistentMqConsumer consumer = new RedisPersistentMqConsumer(
+              config.topic(),
+              config.group(),
+              config.listener(),
+              redisTemplate,
+              pollingInterval);
+
+          consumer.start();
+          log.info("Started Redis Persistent MQ consumer on topic {}", config.topic());
+          redisMqConsumers.add(consumer);
         });
-    mqProducers.putAll(redisMqProducers);
-    return redisMqProducers;
+    return redisMqConsumers;
+  }
+
+  @ConditionalOnBean(MqConsumerConfig.class)
+  @Bean
+  List<RedisPersistentMqConsumer> redisPersistentConsumers(MessageRedisTemplate redisTemplate,
+      List<MqConsumerConfig> mqConsumerConfigs,
+      List<MqConsumer> mqConsumers,
+      @Value("${library.messaging.redis-persistence.polling-interval:100}") int pollingInterval) {
+
+    List<RedisPersistentMqConsumer> consumers = redisMqConsumers(redisTemplate, mqConsumerConfigs, pollingInterval);
+    mqConsumers.addAll(consumers);
+
+    return consumers;
+  }
+
+  @PreDestroy
+  void shutdown() {
+    redisMqConsumers.forEach(MqConsumer::shutdown);
   }
 }
