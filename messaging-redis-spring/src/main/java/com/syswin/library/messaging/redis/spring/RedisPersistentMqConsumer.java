@@ -73,17 +73,17 @@ public class RedisPersistentMqConsumer implements MqConsumer {
       log.debug("Current offset of consumer {} on topic {} is {}", consumerName, redisTopic.topic(), currentOffset);
 
       Set<String> messages = redisTemplate.opsForZSet().rangeByScore(redisTopic.queue(), currentOffset, currentOffset);
-      log.debug("Messages of consumer {} on topic {} are {}", consumerName, redisTopic.topic(), messages);
-
-      try {
-        messages.forEach(payload -> messageConsumer.accept(redisTopic.toMessage(payload)));
-      } catch (Exception e) {
-        log.error("Failed to consume messages from Redis Persistent MQ: {}", messages, e);
-      }
 
       if (!messages.isEmpty()) {
-        redisTemplate.opsForValue().set(offset, String.valueOf(currentOffset + 1));
-        log.debug("Forwarded offset of consumer {} on topic {} by 1", consumerName, redisTopic.topic());
+        log.debug("Messages of consumer {} on topic {} are {}", consumerName, redisTopic.topic(), messages);
+
+        try {
+          messages.forEach(payload -> messageConsumer.accept(redisTopic.toMessage(payload)));
+          redisTemplate.opsForValue().set(offset, String.valueOf(currentOffset + 1));
+          log.debug("Forwarded offset of consumer {} on topic {} by 1", consumerName, redisTopic.topic());
+        } catch (Exception e) {
+          log.error("Failed to consume messages from Redis Persistent MQ: {}", messages, e);
+        }
       }
     }, pollingInterval, pollingInterval, MILLISECONDS);
   }

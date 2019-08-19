@@ -109,9 +109,9 @@ public class RedisPersistentMqIntegrationTest {
     mqProducer.sendOrderly(message2, topic);
     mqProducer.sendRandomly(message3, topic);
 
-    await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(3));
+    await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(4));
 
-    assertThat(messages).containsExactlyInAnyOrder(message1, message2, message3);
+    assertThat(messages).containsExactlyInAnyOrder(message2, message1, message2, message3);
 
     // messages expired
     await().until(() -> System.currentTimeMillis() >= expiryTime);
