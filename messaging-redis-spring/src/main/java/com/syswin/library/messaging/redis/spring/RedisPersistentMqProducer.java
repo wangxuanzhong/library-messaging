@@ -28,6 +28,7 @@ import com.syswin.library.messaging.MessageDeliverException;
 import com.syswin.library.messaging.MqProducer;
 import java.lang.invoke.MethodHandles;
 import java.util.Set;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
@@ -37,10 +38,16 @@ public class RedisPersistentMqProducer implements MqProducer {
 
   private final MessageRedisTemplate redisTemplate;
   private final int expiryTimeSeconds;
+  private final Function<RedisTopic, Long> sequenceSupplier;
 
   public RedisPersistentMqProducer(MessageRedisTemplate redisTemplate, int expiryTimeSeconds) {
+    this(redisTemplate, new RedisSequenceSupplier(redisTemplate), expiryTimeSeconds);
+  }
+
+  RedisPersistentMqProducer(MessageRedisTemplate redisTemplate, Function<RedisTopic, Long> sequenceSupplier, int expiryTimeSeconds) {
     this.redisTemplate = redisTemplate;
     this.expiryTimeSeconds = expiryTimeSeconds;
+    this.sequenceSupplier = sequenceSupplier;
   }
 
   @Override
@@ -72,7 +79,7 @@ public class RedisPersistentMqProducer implements MqProducer {
     try {
       RedisTopic redisTopic = new RedisTopic(topic);
       expireHead(redisTopic);
-      Long currentSeqNo = redisTemplate.opsForValue().increment(redisTopic.seqNo(), 1L);
+      double currentSeqNo = sequenceSupplier.apply(redisTopic);
       redisTemplate.opsForZSet().add(redisTopic.queue(), redisTopic.toPayload(message, expiryTimeSeconds), currentSeqNo);
       log.debug("Sent message {} to topic {} with seqNo {}", message, redisTopic.topic(), currentSeqNo);
     } catch (Exception e) {
@@ -90,6 +97,20 @@ public class RedisPersistentMqProducer implements MqProducer {
         redisTemplate.opsForZSet().removeRangeByScore(redisTopic.queue(), tuple.getScore(), tuple.getScore());
         log.debug("Message {} expired on topic {}", msg, redisTopic.topic());
       }
+    }
+  }
+
+  private static class RedisSequenceSupplier implements Function<RedisTopic, Long> {
+
+    private final MessageRedisTemplate redisTemplate;
+
+    RedisSequenceSupplier(MessageRedisTemplate redisTemplate) {
+      this.redisTemplate = redisTemplate;
+    }
+
+    @Override
+    public Long apply(RedisTopic redisTopic) {
+      return redisTemplate.opsForValue().increment(redisTopic.seqNo(), 1L);
     }
   }
 }

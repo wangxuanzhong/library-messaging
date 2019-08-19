@@ -66,21 +66,28 @@ public class RedisPersistentMqConsumer implements MqConsumer {
     scheduledExecutor.scheduleWithFixedDelay(() -> {
       Set<TypedTuple<String>> tuples = redisTemplate.opsForZSet().rangeWithScores(redisTopic.queue(), 0, 0);
       if (tuples.isEmpty()) {
+        log.debug("No elements in topic {}", redisTopic.topic());
         return;
       }
 
       long currentOffset = currentOffset(tuples);
       log.debug("Current offset of consumer {} on topic {} is {}", consumerName, redisTopic.topic(), currentOffset);
 
-      Set<String> messages = redisTemplate.opsForZSet().rangeByScore(redisTopic.queue(), currentOffset, currentOffset);
+      Long count = redisTemplate.opsForZSet().count(redisTopic.queue(), currentOffset, Double.MAX_VALUE);
+      if (count > 0) {
+        Set<String> messages;
+        do {
+          messages = redisTemplate.opsForZSet().rangeByScore(redisTopic.queue(), currentOffset, currentOffset);
+          ++currentOffset;
+          log.debug("Current offset of consumer {} on topic {} is {}", consumerName, redisTopic.topic(), currentOffset);
+        } while (messages.isEmpty());
 
-      if (!messages.isEmpty()) {
         log.debug("Messages of consumer {} on topic {} are {}", consumerName, redisTopic.topic(), messages);
 
         try {
           messages.forEach(payload -> messageConsumer.accept(redisTopic.toMessage(payload)));
-          redisTemplate.opsForValue().set(offset, String.valueOf(currentOffset + 1));
-          log.debug("Forwarded offset of consumer {} on topic {} by 1", consumerName, redisTopic.topic());
+          redisTemplate.opsForValue().set(offset, String.valueOf(currentOffset));
+          log.debug("Forwarded offset of consumer {} on topic {} to {}", consumerName, redisTopic.topic(), currentOffset);
         } catch (Exception e) {
           log.error("Failed to consume messages from Redis Persistent MQ: {}", messages, e);
         }

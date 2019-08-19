@@ -24,13 +24,17 @@
 
 package com.syswin.library.messaging.redis.spring;
 
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.syswin.library.messaging.MessagingException;
 import com.syswin.library.messaging.MqConsumer;
 import com.syswin.library.messaging.MqProducer;
 import com.syswin.library.messaging.redis.spring.containers.RedisContainer;
+import java.io.UnsupportedEncodingException;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -121,6 +125,28 @@ public class RedisPersistentMqIntegrationTest {
     await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).containsExactly(message4));
 
     mqConsumer.shutdown();
+  }
+
+  @Test
+  public void shouldConsumeTopicWithSeqGaps() throws MessagingException, UnsupportedEncodingException, InterruptedException {
+    Queue<Long> sequences = new LinkedList<>(asList(1L, 7L, 21L));
+    MqProducer mqProducer = new RedisPersistentMqProducer(redisTemplate, redisTopic -> sequences.poll(), expiryTimeSeconds);
+    mqProducer.start();
+
+    String topic = "7sea";
+
+    mqProducer.sendRandomly(message1, topic);
+    mqProducer.sendRandomly(message2, topic);
+    mqProducer.sendRandomly(message3, topic);
+
+    Queue<String> messages = new ConcurrentLinkedQueue<>();
+    MqConsumer mqConsumer = new RedisPersistentMqConsumer(topic, "another-consumer", messages::add, redisTemplate, 100);
+    mqConsumer.start();
+
+    await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).containsExactly(message1, message2, message3));
+
+    mqConsumer.shutdown();
+    mqProducer.shutdown();
   }
 
   private static class ExceptionThrowingConsumer implements Consumer<String> {
