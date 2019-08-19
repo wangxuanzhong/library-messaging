@@ -85,6 +85,7 @@ public class RedisPersistentMqConsumer implements MqConsumer {
           log.error("Failed to consume messages from Redis Persistent MQ: {}", messages, e);
         }
       }
+      expireHead(redisTopic, tuples);
     }, pollingInterval, pollingInterval, MILLISECONDS);
   }
 
@@ -109,5 +110,15 @@ public class RedisPersistentMqConsumer implements MqConsumer {
       currentOffset = Math.max(currentOffset, tuple.getScore().longValue());
     }
     return currentOffset;
+  }
+
+  private void expireHead(RedisTopic redisTopic, Set<TypedTuple<String>> tuples) {
+    for (TypedTuple<String> tuple : tuples) {
+      String msg = tuple.getValue();
+      if (redisTopic.expired(msg)) {
+        redisTemplate.opsForZSet().removeRangeByScore(redisTopic.queue(), tuple.getScore(), tuple.getScore());
+        log.debug("Message {} expired on topic {} by consumer {}", msg, redisTopic.topic(), consumerName);
+      }
+    }
   }
 }

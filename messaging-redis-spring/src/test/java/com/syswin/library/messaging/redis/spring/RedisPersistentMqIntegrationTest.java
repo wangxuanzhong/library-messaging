@@ -58,9 +58,6 @@ public class RedisPersistentMqIntegrationTest {
   private static final String message2 = "message2";
   private static final String message3 = "message3";
   private static final String message4 = "message4";
-  private static final String message5 = "message5";
-  private static final String message6 = "message6";
-  private static final String message7 = "message7";
 
   @ClassRule
   public static final RedisContainer redis = new RedisContainer();
@@ -103,11 +100,11 @@ public class RedisPersistentMqIntegrationTest {
 
   @Test
   public void shouldReceiveSentMessages() throws Exception {
-    long expiryTime = System.currentTimeMillis() + expiryTimeSeconds * 1000 + 500;
     mqProducer.send(message2, topic, tag, keys);
     mqProducer.send(message1, topic, tag, keys);
     mqProducer.sendOrderly(message2, topic);
     mqProducer.sendRandomly(message3, topic);
+    long expiryTime = System.currentTimeMillis() + expiryTimeSeconds * 1000 + 500;
 
     await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).hasSize(4));
 
@@ -117,14 +114,11 @@ public class RedisPersistentMqIntegrationTest {
     await().until(() -> System.currentTimeMillis() >= expiryTime);
 
     mqProducer.send(message4, topic, tag, keys);
-    mqProducer.send(message5, topic, tag, keys);
-    mqProducer.send(message6, topic, tag, keys);
-    mqProducer.send(message7, topic, tag, keys);
     Queue<String> messages = new ConcurrentLinkedQueue<>();
     MqConsumer mqConsumer = new RedisPersistentMqConsumer(topic, "another-consumer", messages::add, redisTemplate, 100);
     mqConsumer.start();
 
-    await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).containsExactly(message4, message5, message6, message7));
+    await().atMost(1, SECONDS).untilAsserted(() -> assertThat(messages).containsExactly(message4));
 
     mqConsumer.shutdown();
   }

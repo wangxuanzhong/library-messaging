@@ -30,6 +30,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 
 public class RedisPersistentMqProducer implements MqProducer {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -82,10 +83,11 @@ public class RedisPersistentMqProducer implements MqProducer {
   }
 
   private void expireHead(RedisTopic redisTopic) {
-    Set<String> messages = redisTemplate.opsForZSet().range(redisTopic.queue(), 0, 0);
-    for (String msg : messages) {
+    Set<TypedTuple<String>> messages = redisTemplate.opsForZSet().rangeWithScores(redisTopic.queue(), 0, 0);
+    for (TypedTuple<String> tuple : messages) {
+      String msg = tuple.getValue();
       if (redisTopic.expired(msg)) {
-        redisTemplate.opsForZSet().removeRange(redisTopic.queue(), 0, 0);
+        redisTemplate.opsForZSet().removeRangeByScore(redisTopic.queue(), tuple.getScore(), tuple.getScore());
         log.debug("Message {} expired on topic {}", msg, redisTopic.topic());
       }
     }
