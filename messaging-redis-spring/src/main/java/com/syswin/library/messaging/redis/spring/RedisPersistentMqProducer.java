@@ -80,7 +80,7 @@ public class RedisPersistentMqProducer implements MqProducer {
       RedisTopic redisTopic = new RedisTopic(topic);
       expireHead(redisTopic);
       double currentSeqNo = sequenceSupplier.apply(redisTopic);
-      redisTemplate.opsForZSet().add(redisTopic.queue(), redisTopic.toPayload(message, expiryTimeSeconds), currentSeqNo);
+      redisTemplate.opsForZSet().add(redisTopic.queue(), redisTopic.toPayload((long) currentSeqNo, message, expiryTimeSeconds), currentSeqNo);
       log.debug("Sent message {} to topic {} with seqNo {}", message, redisTopic.topic(), currentSeqNo);
     } catch (Exception e) {
       throw new MessageDeliverException(

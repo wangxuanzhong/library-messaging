@@ -58,8 +58,9 @@ class RedisTopic {
     return topic;
   }
 
-  String toPayload(String message, int expiryTimeSeconds) {
-    return EXPIRY_PREFIX + (System.currentTimeMillis() + 1000 * expiryTimeSeconds) + "," + PAYLOAD_PREFIX + message;
+  String toPayload(long currentSeqNo, String message, int expiryTimeSeconds) {
+    // added seq to avoid duplicate message
+    return "seq:" + currentSeqNo + "," + EXPIRY_PREFIX + (System.currentTimeMillis() + 1000 * expiryTimeSeconds) + "," + PAYLOAD_PREFIX + message;
   }
 
   String toMessage(String payload) {
